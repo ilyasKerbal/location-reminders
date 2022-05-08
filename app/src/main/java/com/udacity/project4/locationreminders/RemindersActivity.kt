@@ -9,6 +9,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.NavHostFragment
 import com.udacity.project4.R
+import com.udacity.project4.utils.createChannel
 import kotlinx.android.synthetic.main.activity_reminders.*
 
 /**
@@ -17,9 +18,9 @@ import kotlinx.android.synthetic.main.activity_reminders.*
 class RemindersActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        super.onCreate(null)
         setContentView(R.layout.activity_reminders)
-
+        createChannel(this)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -31,4 +32,5 @@ class RemindersActivity : AppCompatActivity() {
         }
         return super.onOptionsItemSelected(item)
     }
+
 }
