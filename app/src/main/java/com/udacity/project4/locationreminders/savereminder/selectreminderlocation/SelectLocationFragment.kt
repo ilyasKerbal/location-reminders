@@ -140,14 +140,12 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback{
             updateCurrentPoi(poi)
         }
 
-//        map?.setOnMapLongClickListener { latLng ->
-//            binding.btnSaveLocation.visibility = View.VISIBLE
-//            binding.radiusSeekbar.visibility = View.VISIBLE
-//            val geocoder = Geocoder(requireContext(), Locale.getDefault())
-//            val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-//            val address: String = addresses[0].getAddressLine(0)
-//            updateCurrentPoi(PointOfInterest(latLng, null, address))
-//        }
+        map?.setOnMapLongClickListener { latLng ->
+            binding.btnSaveLocation.visibility = View.VISIBLE
+            binding.radiusSeekbar.visibility = View.VISIBLE
+
+            updateCurrentPoi(PointOfInterest(latLng, null, "Pin Drop"))
+        }
 
         map?.setOnPoiClickListener { poi ->
             binding.btnSaveLocation.visibility = View.VISIBLE
@@ -192,6 +190,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback{
             if (grantResults.isNotEmpty() && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                 myLocationEnabledCheck()
                 getDeviceLocationAndMoveCamera()
+            }else {
+                _viewModel.showEnableLocation.value = Intent()
             }
         }
     }

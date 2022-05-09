@@ -43,7 +43,6 @@ private const val REQUEST_TURN_DEVICE_LOCATION_ON = 12
 
 class SaveReminderFragment : BaseFragment() {
 
-    // Check if the device is running Q+
     private val runningQOrLater = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
     // Geofencing client
     private lateinit var geofencingClient: GeofencingClient
@@ -107,9 +106,6 @@ class SaveReminderFragment : BaseFragment() {
             )
             _viewModel.validateAndSaveReminder(item)
         }
-        if (!foregroundAndBackgroundLocationPermissionApproved()) {
-            requestForegroundAndBackgroundLocationPermissions()
-        }
     }
 
     override fun onDestroy() {
@@ -165,7 +161,7 @@ class SaveReminderFragment : BaseFragment() {
 
     private fun checkDeviceLocationSettingsAndStartGeofence(resolve: Boolean = true) {
         val locationRequest = LocationRequest.create().apply {
-            priority = LocationRequest.PRIORITY_LOW_POWER
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
         val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
         val settingsClient = LocationServices.getSettingsClient(requireActivity())
@@ -174,10 +170,10 @@ class SaveReminderFragment : BaseFragment() {
         locationSettingsResponseTask.addOnFailureListener { exception ->
             if (exception is ResolvableApiException && resolve) {
                 try {
-                    exception.startResolutionForResult(
-                        requireActivity(),
-                        REQUEST_TURN_DEVICE_LOCATION_ON
-                    )
+                    this.startIntentSenderForResult(
+                        exception.resolution.intentSender,
+                        REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE,
+                        Intent(), 0, 0, 0, null)
                 } catch (sendEx: IntentSender.SendIntentException) {
                     Log.e("SaveReminderFragment", "Error getting location settings resolution: ${sendEx.message}")
                 }
@@ -218,8 +214,8 @@ class SaveReminderFragment : BaseFragment() {
             }
             else -> REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
         }
-        ActivityCompat.requestPermissions(
-            requireActivity(),
+
+        this.requestPermissions(
             permissionsArray,
             resultCode
         )
