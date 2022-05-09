@@ -71,7 +71,7 @@ class SaveReminderViewModelTest {
         viewModel.saveReminder(TestingData.reminderDataItem)
 
         MatcherAssert.assertThat(
-            viewModel.showToast.getOrAwaitValue(), `is`(app.getString(R.string.reminder_saved))
+            viewModel.showSnackBar.getOrAwaitValue(), `is`(app.getString(R.string.reminder_saved))
         )
 
         Assert.assertEquals(viewModel.navigationCommand.getOrAwaitValue(), NavigationCommand.Back)
