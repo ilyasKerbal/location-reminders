@@ -25,6 +25,71 @@ import org.junit.Test
 @SmallTest
 class RemindersDaoTest {
 
-//    TODO: Add testing implementation to the RemindersDao.kt
+    @get: Rule
+    var instantTaskExecutorRule = InstantTaskExecutorRule()
+
+    private lateinit var database: RemindersDatabase
+
+    @Before
+    fun initDatabase() {
+        database = Room.inMemoryDatabaseBuilder(
+            ApplicationProvider.getApplicationContext(),
+            RemindersDatabase::class.java
+        ).build()
+    }
+
+    @After
+    fun closeDb() = database.close()
+
+    @Test
+    fun getReminders_verifyLoadedAllReminders() = runBlockingTest {
+
+        val reminder1 = TestingData.items[0]
+        val reminder2 = TestingData.items[1]
+        val reminder3 = TestingData.items[2]
+
+        database.reminderDao().saveReminder(reminder1)
+        database.reminderDao().saveReminder(reminder2)
+        database.reminderDao().saveReminder(reminder3)
+
+
+        val loadedReminders = database.reminderDao().getReminders()
+
+        assertThat(loadedReminders.size, `is`(3))
+        assertThat(loadedReminders[0].id, `is`(reminder1.id))
+        assertThat(loadedReminders[1].id, `is`(reminder2.id))
+        assertThat(loadedReminders[2].id, `is`(reminder3.id))
+    }
+
+    @Test
+    fun saveReminder_getReminderById_verifyCorrectData() = runBlockingTest {
+
+        val reminder = TestingData.items[0]
+        database.reminderDao().saveReminder(reminder)
+
+        val loadedReminder = database.reminderDao().getReminderById(reminder.id)
+
+        assertThat(loadedReminder as ReminderDTO, notNullValue())
+        assertThat(loadedReminder.id, `is`(reminder.id))
+        assertThat(loadedReminder.title, `is`(reminder.title))
+        assertThat(loadedReminder.description, `is`(reminder.description))
+        assertThat(loadedReminder.location, `is`(reminder.location))
+        assertThat(loadedReminder.latitude, `is`(reminder.latitude))
+        assertThat(loadedReminder.longitude, `is`(reminder.longitude))
+    }
+
+    @Test
+    fun deleteAllReminders_verifyEmpty() = runBlockingTest {
+
+        val reminder1 = TestingData.items[0]
+        val reminder2 = TestingData.items[1]
+        database.reminderDao().saveReminder(reminder1)
+        database.reminderDao().saveReminder(reminder2)
+
+        database.reminderDao().deleteAllReminders()
+
+        val loadedReminders = database.reminderDao().getReminders()
+        assertThat(loadedReminders.size, `is`(0))
+    }
 
 }
