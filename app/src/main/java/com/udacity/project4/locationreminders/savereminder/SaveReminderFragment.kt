@@ -229,12 +229,13 @@ class SaveReminderFragment : BaseFragment() {
         val item = reminderDataItem?.copy()
         reminderDataItem = null
         item ?: return
+        val radius = _viewModel.radius.value?.toFloat() ?: GEOFENCE_RADIUS_IN_METERS
         val geofence = Geofence.Builder()
             .setRequestId(item.id)
             .setCircularRegion(
                 item.latitude!!,
                 item.longitude!!,
-                GEOFENCE_RADIUS_IN_METERS
+                radius
             )
             .setExpirationDuration(Geofence.NEVER_EXPIRE)
             .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)

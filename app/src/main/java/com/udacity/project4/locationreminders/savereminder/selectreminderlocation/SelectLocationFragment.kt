@@ -11,8 +11,11 @@ import android.location.Geocoder
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.widget.SeekBar
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Observer
+import androidx.lifecycle.observe
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
@@ -27,6 +30,8 @@ import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
+import com.udacity.project4.utils.GeofencingConstants
+import com.udacity.project4.utils.GeofencingConstants.GEOFENCE_RADIUS_IN_METERS
 import com.udacity.project4.utils.isGranted
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
@@ -45,6 +50,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback{
 
     private var currentMarker: Marker? = null
     private var currentPOI: PointOfInterest? = null
+
+    private var currentCircleMarker: Circle? = null
 
     // Request the last known location of the user's device.
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
@@ -70,12 +77,19 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback{
         }
         if (currentPOI == null){
             binding.btnSaveLocation.visibility = View.GONE
+            binding.radiusSeekbar.visibility = View.GONE
         }
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
         val mapFragment = childFragmentManager.findFragmentById(R.id.map_fragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        _viewModel.radius.observe(viewLifecycleOwner, Observer { newRadius ->
+            currentPOI?.latLng?.let {
+                updateCircle(currentPOI!!)
+            }
+        })
 
         return binding.root
     }
@@ -126,16 +140,18 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback{
             updateCurrentPoi(poi)
         }
 
-        map?.setOnMapLongClickListener { latLng ->
-            binding.btnSaveLocation.visibility = View.VISIBLE
-            val geocoder = Geocoder(requireContext(), Locale.getDefault())
-            val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-            val address: String = addresses[0].getAddressLine(0)
-            updateCurrentPoi(PointOfInterest(latLng, null, address))
-        }
+//        map?.setOnMapLongClickListener { latLng ->
+//            binding.btnSaveLocation.visibility = View.VISIBLE
+//            binding.radiusSeekbar.visibility = View.VISIBLE
+//            val geocoder = Geocoder(requireContext(), Locale.getDefault())
+//            val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+//            val address: String = addresses[0].getAddressLine(0)
+//            updateCurrentPoi(PointOfInterest(latLng, null, address))
+//        }
 
         map?.setOnPoiClickListener { poi ->
             binding.btnSaveLocation.visibility = View.VISIBLE
+            binding.radiusSeekbar.visibility = View.VISIBLE
             updateCurrentPoi(poi)
         }
 
@@ -208,6 +224,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback{
         if (currentMarker != null) {
             currentMarker?.remove()
         }
+
         currentPOI = poi
         currentMarker = map?.addMarker(
             MarkerOptions()
@@ -215,8 +232,23 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback{
                 .title(poi.name)
         )
         currentMarker?.showInfoWindow()
+
+        updateCircle(poi)
     }
 
+    private fun updateCircle(poi: PointOfInterest) {
+        currentCircleMarker?.remove()
+
+        val radius = _viewModel.radius.value?.toDouble() ?: GEOFENCE_RADIUS_IN_METERS.toDouble()
+
+        currentCircleMarker = map?.addCircle(
+            CircleOptions()
+                .center(poi.latLng)
+                .radius(radius)
+                .fillColor(ContextCompat.getColor(requireContext(), R.color.geofencing_fill_color))
+                .strokeColor(ContextCompat.getColor(requireContext(), R.color.geofencing_stroke_color))
+        )
+    }
 
 
 }

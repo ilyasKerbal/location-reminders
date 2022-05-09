@@ -10,6 +10,9 @@ import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
+import com.udacity.project4.utils.GeofencingConstants.GEOFENCE_RADIUS_IN_METERS
+import com.udacity.project4.utils.GeofencingConstants.GEOFENCE_RADIUS_MAX
+import com.udacity.project4.utils.GeofencingConstants.GEOFENCE_RADIUS_MIN
 import com.udacity.project4.utils.SingleLiveEvent
 import kotlinx.coroutines.launch
 
@@ -21,6 +24,9 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
     val selectedPOI = MutableLiveData<PointOfInterest>()
     val latitude = MutableLiveData<Double>()
     val longitude = MutableLiveData<Double>()
+    val radius = MutableLiveData<Int>(GEOFENCE_RADIUS_IN_METERS.toInt())
+    val radius_min = GEOFENCE_RADIUS_MIN
+    val radius_max = GEOFENCE_RADIUS_MAX
 
 
     val addGeoFencingRequest = SingleLiveEvent<ReminderDataItem>()
