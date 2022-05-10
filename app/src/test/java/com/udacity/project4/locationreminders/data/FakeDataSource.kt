@@ -29,16 +29,15 @@ class FakeDataSource : ReminderDataSource {
     }
 
     override suspend fun getReminder(id: String): Result<ReminderDTO> {
-        try {
+        if (shouldReturnError) {
+            return Result.Error("Something went wrong! ")
+        } else {
             val reminder = fakeData[id]
             if (reminder != null) {
                 return Result.Success(reminder)
             }
             return Result.Error("Reminder not found!")
-        } catch (e: Exception) {
-            return Result.Error(e.message)
         }
-
     }
 
     override suspend fun deleteAllReminders() {

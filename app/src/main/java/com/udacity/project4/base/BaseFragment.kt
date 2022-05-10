@@ -36,7 +36,7 @@ abstract class BaseFragment : Fragment() {
             Snackbar.make(this.view!!, getString(it), Snackbar.LENGTH_LONG).show()
         })
         _viewModel.showEnableLocation.observe(this, Observer {
-            Snackbar.make(this.view!!, getString(R.string.location_required_error), Snackbar.LENGTH_LONG)
+            Snackbar.make(this.view!!, getString(R.string.location_required_error), Snackbar.LENGTH_INDEFINITE)
                 .setAction(R.string.settings) {
                     startActivity(Intent().apply {
                         action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS

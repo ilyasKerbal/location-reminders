@@ -116,7 +116,7 @@ class SaveReminderFragment : BaseFragment() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_TURN_DEVICE_LOCATION_ON) {
+        if (requestCode == REQUEST_TURN_DEVICE_LOCATION_ON || requestCode == REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE) {
             checkDeviceLocationSettingsAndStartGeofence(false)
         }
     }
@@ -170,12 +170,16 @@ class SaveReminderFragment : BaseFragment() {
         locationSettingsResponseTask.addOnFailureListener { exception ->
             if (exception is ResolvableApiException && resolve) {
                 try {
+                    val resultCode = when {
+                        runningQOrLater -> REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE
+                        else -> REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
+                    }
                     this.startIntentSenderForResult(
                         exception.resolution.intentSender,
-                        REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE,
+                        resultCode,
                         Intent(), 0, 0, 0, null)
                 } catch (sendEx: IntentSender.SendIntentException) {
-                    Log.e("SaveReminderFragment", "Error getting location settings resolution: ${sendEx.message}")
+                    _viewModel.showSnackBar.value = "Something wrong with the device settings"
                 }
             } else {
                 Snackbar.make(
@@ -186,10 +190,11 @@ class SaveReminderFragment : BaseFragment() {
                 }.show()
             }
         }
-        locationSettingsResponseTask.addOnCompleteListener {
-            if (it.isSuccessful) {
-                addGeofenceForClue()
-            }
+        locationSettingsResponseTask.addOnSuccessListener {
+            addGeofenceForClue()
+        }
+        locationSettingsResponseTask.addOnFailureListener {
+            _viewModel.showSnackBarInt.value = R.string.location_required_error
         }
     }
 
