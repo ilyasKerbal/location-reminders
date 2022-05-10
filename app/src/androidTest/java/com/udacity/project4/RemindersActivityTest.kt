@@ -30,6 +30,7 @@ import com.udacity.project4.util.monitorActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.startsWith
 import org.junit.*
 import org.junit.runner.RunWith
 import org.koin.android.ext.koin.androidContext
@@ -78,6 +79,7 @@ class RemindersActivityTest :
                 )
             }
             single { RemindersLocalRepository(get()) as ReminderDataSource }
+            single { RemindersLocalRepository(get()) }
             single { LocalDB.createRemindersDao(appContext) }
         }
         //declare a new koin module
@@ -113,6 +115,18 @@ class RemindersActivityTest :
     // An idling resource that waits for Data Binding to have no pending bindings.
     private val dataBindingIdlingResource = DataBindingIdlingResource()
 
+    @Before
+    fun registerIdlingResource() {
+        IdlingRegistry.getInstance().register(EspressoIdlingResource.countingIdlingResource)
+        IdlingRegistry.getInstance().register(dataBindingIdlingResource)
+    }
+
+
+    @After
+    fun unregisterIdlingResource() {
+        IdlingRegistry.getInstance().unregister(EspressoIdlingResource.countingIdlingResource)
+        IdlingRegistry.getInstance().unregister(dataBindingIdlingResource)
+    }
 
     @Test
     fun addReminder_verifyNewReminderInTheList() {
@@ -155,17 +169,13 @@ class RemindersActivityTest :
         onView(withText(reminderDescription)).check(matches(isDisplayed()))
         onView(withText(selectedLocation)).check(matches(isDisplayed()))
 
-        // Verify snackbar is shown correctly!
-        onView(withText(R.string.reminder_saved)).inRoot(
-            withDecorView(CoreMatchers.not(decorView))).check(matches(isDisplayed()))
+        // Click on that item
+        onView(withText(reminderTitle)).perform(ViewActions.click())
 
-//        // Click on that item
-//        onView(withText(reminderTitle)).perform(ViewActions.click())
-//
-//        // Verify detail screen is correct!
-//        onView(withText(reminderTitle)).check(matches(isDisplayed()))
-//        onView(withText(reminderDescription)).check(matches(isDisplayed()))
-//        onView(withText(selectedLocation)).check(matches(isDisplayed()))
+        // Verify detail screen is correct!
+        onView(withText(reminderTitle)).check(matches(isDisplayed()))
+        onView(withText(reminderDescription)).check(matches(isDisplayed()))
+        onView(withText(selectedLocation)).check(matches(isDisplayed()))
 
         // Make sure the activity is closed before resetting the db:
         activityScenario.close()
